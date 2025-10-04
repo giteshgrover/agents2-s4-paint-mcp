@@ -143,6 +143,85 @@ agents2-s4-paint-mcp/
 2. **AI Agent** (`talk2mcp.py`): Orchestrates the workflow using Gemini AI and MCP client
 3. **Error Handling**: Robust error handling for AppleScript execution and subprocess calls
 
+## Gmail MCP
+
+### Steps to configure
+Step 1: Create a Google Cloud Project
+
+Go to Google Cloud Console
+.
+
+At the top left, click the project dropdown → New Project.
+
+Give it a name (e.g., MCP-Gmail) → Create.
+
+⚡ Step 2: Enable Gmail API
+
+In the left sidebar, go to APIs & Services → Library.
+
+Search for Gmail API.
+
+Click it → Enable.
+
+📜 Step 3: Configure OAuth Consent Screen
+
+Go to APIs & Services → OAuth consent screen.
+
+Choose External (so you can test with your personal Gmail account).
+
+Fill in:
+
+App name (e.g., MCP Mailer).
+
+User support email = your Gmail address.
+
+Developer contact info = your Gmail address.
+
+Save and continue.
+
+On Scopes, click Add or Remove Scopes, select:
+
+.../auth/gmail.send
+(that’s all you need for sending).
+Save.
+
+On Test users, add your Gmail address so you can test.
+
+Save and finish.
+
+🔐 Step 4: Create OAuth Client ID
+
+Go to APIs & Services → Credentials.
+
+Click Create Credentials → OAuth client ID.
+
+Choose Desktop app.
+
+Name it (e.g., MCP Gmail Client).
+
+Click Create.
+
+Download JSON → this is your real credentials.json.
+
+📝 Step 5: Use in Python
+
+Save that file as credentials.json in your project, then update your script:
+
+SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
+
+result = gmail_send_email(
+    to_email="recipient@example.com",
+    subject="Hello from MCP",
+    body="This is a test email sent via Gmail API!",
+    credentials_path="credentials.json",   # your downloaded file
+)
+
+
+👉 First run: it will pop open a browser, ask you to log in and authorize.
+👉 After that: it will save a token.json so future runs don’t prompt again.
+
+✅ Once you do this, your client_id will look different (unique to your project, not that default 762083... one).
+
 ## 🐛 Troubleshooting
 
 ### Common Issues
@@ -177,17 +256,7 @@ add_rectangle_in_keynote_presentation()
 add_text_in_keynote_presentation("Your calculated result here")
 ```
 
-## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🙏 Acknowledgments
 

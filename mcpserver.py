@@ -2,6 +2,7 @@
 from mcp.server.fastmcp import FastMCP, Image
 from mcp.server.fastmcp.prompts import base
 from mcp.types import TextContent
+from mcp.server.lowlevel import Server
 from mcp import types
 from PIL import Image as PILImage
 import math
@@ -12,6 +13,12 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 import os
 import subprocess
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+from email.mime.text import MIMEText
+import base64
 
 # instantiate an MCP server client
 mcp = FastMCP("Calculator")
@@ -234,6 +241,61 @@ def add_text_in_keynote_presentation(text: str) -> None:
     except Exception as e:
         print(f"Unexpected error in AppleScript execution: {e}")
         raise
+
+# Define scopes for Gmail API access
+# SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
+SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
+
+@mcp.tool()
+def send_email(to_email: str, subject: str, body: str) -> None:
+    """
+    Send an email using Gmail API.
+
+    Args:
+        to_email (str): Recipient email address
+        subject (str): Email subject
+        body (str): Email body (plain text)
+    """
+        
+    print("CALLED: send_email(to_email: str, subject: str, body: str) -> None:")
+    creds = None
+
+    # Load saved tokens if available
+    credentials_path = "./.gmail-mcp/credentials.json"
+    token_path = "./.gmail-mcp/token.json"
+    if os.path.exists(token_path):
+        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+        print("token found")
+
+     # If no valid creds, go through OAuth flow
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(credentials_path, SCOPES)
+            creds = flow.run_local_server(port=0)
+            print("Credential file found")
+        # Save token for next time
+        with open(token_path, "w") as token_file:
+            token_file.write(creds.to_json())
+
+    # Build Gmail service
+    service = build("gmail", "v1", credentials=creds)
+
+    # Create email message
+    message = MIMEText(body)
+    message["to"] = to_email
+    message["from"] = "me"
+    message["subject"] = subject
+    raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+    # Send the email
+    send_result = service.users().messages().send(
+        userId="me", body={"raw": raw_message}
+    ).execute()
+    print(f"Send Result: {send_result}")
+    
+
 
 def create_presentation() -> str:
     """Create a presentation and return the name of the presentation"""
