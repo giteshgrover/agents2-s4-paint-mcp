@@ -147,7 +147,10 @@ Examples:
 DO NOT include any explanations or additional text.
 Your entire response should be a single line starting with either FUNCTION_CALL: or DONE!!"""
 
+                # Query for Drawing on Keynote
                 query = """Find the ASCII values of characters in INDIA and then calculate the sum of exponentials of those values. Once you have the answer, create a keynote presentation, add a rectangle to opened keynote presentation, and add the answer as a text to the rectangle."""
+                #Query to send email instead
+                # query = """Find the ASCII values of characters in INDIA and then calculate the sum of exponentials of those values. Once you have the answer, send an email to 'gitesh.grover@gmail.com' with subject 'Sending MCP email by Gemini' and with body with your final answer """
                 print("Starting iteration loop...")
                 
                 # Use global iteration variables
