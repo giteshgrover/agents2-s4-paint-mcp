@@ -10,6 +10,8 @@ import time
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
+import os
+import subprocess
 
 # instantiate an MCP server client
 mcp = FastMCP("Calculator")
@@ -152,18 +154,102 @@ def fibonacci_numbers(n: int) -> list:
     return fib_sequence[:n]
 
 @mcp.tool()
+def create_and_open_keynote_presentation() -> None:
+    """Creates and opens a keynote presentation"""
+    print("CALLED: create_and_open_keynote_presentation() -> None:")
+    applescript = '''
+    tell application "Keynote"
+        activate
+        if not (exists document 1) then
+            set thisDoc to make new document with properties {document theme:theme "White"}
+        end if
+        tell the front document
+            set thisSlide to slide 1
+            -- Set slide layout to blank
+            set base slide of thisSlide to master slide "Blank" of thisDoc
+        end tell
+    end tell
+    '''
+    try:
+        result = subprocess.run(["osascript", "-e", applescript], 
+                              capture_output=True, text=True, check=True)
+        print(f"AppleScript executed successfully: {result.stdout}")
+    except subprocess.CalledProcessError as e:
+        print(f"AppleScript execution failed: {e.stderr}")
+        raise
+    except Exception as e:
+        print(f"Unexpected error in AppleScript execution: {e}")
+        raise
+
+@mcp.tool()
+def add_rectangle_in_keynote_presentation() -> None:
+    """Adds a rectangle to an opened keynote presentation"""
+    print("CALLED: add_rectangle_in_keynote_presentation() -> None:")
+    applescript = '''
+    tell application "Keynote"
+        activate
+        tell the front document
+            set thisSlide to slide 1
+            tell thisSlide
+                set newShape to make new shape with properties {position:{150, 150}, width:300, height:300}
+            end tell
+        end tell
+    end tell
+    '''
+    try:
+        result = subprocess.run(["osascript", "-e", applescript], 
+                              capture_output=True, text=True, check=True)
+        print(f"AppleScript executed successfully: {result.stdout}")
+    except subprocess.CalledProcessError as e:
+        print(f"AppleScript execution failed: {e.stderr}")
+        raise
+    except Exception as e:
+        print(f"Unexpected error in AppleScript execution: {e}")
+        raise
+
+@mcp.tool()
+def add_text_in_keynote_presentation(text: str) -> None:
+    """Adds text to an opened keynote presentation"""
+    print("CALLED: add_text_in_keynote_presentation(text: str) -> None:")
+    # Properly escape the text for AppleScript
+    escaped_text = text.replace('"', '\\"').replace('\\', '\\\\')
+    applescript = f'''
+    tell application "Keynote"
+        activate
+        tell the front document
+            set thisSlide to slide 1
+            tell thisSlide
+                set newShape to make new shape with properties {{object text:"{escaped_text}", position:{{150, 150}}, width:200, height:100}}
+            end tell
+        end tell
+    end tell
+    '''
+    try:
+        result = subprocess.run(["osascript", "-e", applescript], 
+                              capture_output=True, text=True, check=True)
+        print(f"AppleScript executed successfully: {result.stdout}")
+    except subprocess.CalledProcessError as e:
+        print(f"AppleScript execution failed: {e.stderr}")
+        raise
+    except Exception as e:
+        print(f"Unexpected error in AppleScript execution: {e}")
+        raise
+
 def create_presentation() -> str:
     """Create a presentation and return the name of the presentation"""
     print("CALLED: create_presentation() -> str:")
     prs = Presentation()
     slide_layout = prs.slide_layouts[6]  # blank slide (or prs.slide_layouts[1] ??)
     slide = prs.slides.add_slide(slide_layout)
+    
     pr_name = "paint_like.pptx"
     prs.save(pr_name)
     print(f"Presentation saved as {pr_name}")
+    # Open automatically (macOS)
+    os.system(f"open {pr_name}")
     return pr_name
 
-@mcp.tool()
+
 def add_rectangle_in_presentation(pr_name: str) -> None:
     """Add a rectangle to a presentation"""
     print("CALLED: add_rectangle(pr_name: str) -> None:")
@@ -186,7 +272,7 @@ def add_rectangle_in_presentation(pr_name: str) -> None:
     prs.save(pr_name)
     print(f"Presentation saved as {pr_name}")
 
-@mcp.tool()
+
 def add_text_in_presentation(pr_name: str, text: str) -> None:
     """Add text to a presentation"""
     print("CALLED: add_text_in_presentation(pr_name: str, text: str) -> None:")

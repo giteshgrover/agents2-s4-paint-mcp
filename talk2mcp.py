@@ -14,7 +14,7 @@ load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key)
 
-max_iterations = 3
+max_iterations = 8
 last_response = None
 iteration = 0
 iteration_response = []
@@ -59,7 +59,7 @@ async def main():
         print("Establishing connection to MCP server...")
         server_params = StdioServerParameters(
             command="python3",
-            args=["example2.py"]
+            args=["mcpserver.py"]
         )
 
         async with stdio_client(server_params) as (read, write):
@@ -128,23 +128,26 @@ You must respond with EXACTLY ONE line in one of these formats (no additional te
 1. For function calls:
    FUNCTION_CALL: function_name|param1|param2|...
    
-2. For final answers:
-   FINAL_ANSWER: [number]
+2. when you are done:
+   DONE!!
 
 Important:
 - When a function returns multiple values, you need to process all of them
-- Only give FINAL_ANSWER when you have completed all necessary calculations
+- Only give DONE!! when you have completed all necessary calculations and performed all necessary actions
 - Do not repeat function calls with the same parameters
 
 Examples:
 - FUNCTION_CALL: add|5|3
 - FUNCTION_CALL: strings_to_chars_to_int|INDIA
-- FINAL_ANSWER: [42]
+- FUNCTION_CALL: create_and_open_keynote_presentation|
+- FUNCTION_CALL: add_rectangle_in_keynote_presentation|
+- FUNCTION_CALL: add_text_in_keynote_presentation|42
+- DONE!!
 
 DO NOT include any explanations or additional text.
-Your entire response should be a single line starting with either FUNCTION_CALL: or FINAL_ANSWER:"""
+Your entire response should be a single line starting with either FUNCTION_CALL: or DONE!!"""
 
-                query = """Find the ASCII values of characters in INDIA and then return sum of exponentials of those values. """
+                query = """Find the ASCII values of characters in INDIA and then calculate the sum of exponentials of those values. Once you have the answer, create a keynote presentation, add a rectangle to opened keynote presentation, and add the answer as a text to the rectangle."""
                 print("Starting iteration loop...")
                 
                 # Use global iteration variables
@@ -268,34 +271,34 @@ Your entire response should be a single line starting with either FUNCTION_CALL:
                             iteration_response.append(f"Error in iteration {iteration + 1}: {str(e)}")
                             break
 
-                    elif response_text.startswith("FINAL_ANSWER:"):
+                    elif response_text.startswith("DONE!!"):
                         print("\n=== Agent Execution Complete ===")
-                        result = await session.call_tool("open_paint")
-                        print(result.content[0].text)
+                        # # result = await session.call_tool("open_paint")
+                        # # print(result.content[0].text)
 
-                        # Wait longer for Paint to be fully maximized
-                        await asyncio.sleep(1)
+                        # # Wait longer for Paint to be fully maximized
+                        # await asyncio.sleep(1)
 
-                        # Draw a rectangle
-                        result = await session.call_tool(
-                            "draw_rectangle",
-                            arguments={
-                                "x1": 780,
-                                "y1": 380,
-                                "x2": 1140,
-                                "y2": 700
-                            }
-                        )
-                        print(result.content[0].text)
+                        # # Draw a rectangle
+                        # result = await session.call_tool(
+                        #     "draw_rectangle",
+                        #     arguments={
+                        #         "x1": 780,
+                        #         "y1": 380,
+                        #         "x2": 1140,
+                        #         "y2": 700
+                        #     }
+                        # )
+                        # print(result.content[0].text)
 
-                        # Draw rectangle and add text
-                        result = await session.call_tool(
-                            "add_text_in_paint",
-                            arguments={
-                                "text": response_text
-                            }
-                        )
-                        print(result.content[0].text)
+                        # # Draw rectangle and add text
+                        # result = await session.call_tool(
+                        #     "add_text_in_paint",
+                        #     arguments={
+                        #         "text": response_text
+                        #     }
+                        # )
+                        # print(result.content[0].text)
                         break
 
                     iteration += 1
